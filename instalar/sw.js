@@ -1,8 +1,13 @@
-const CACHE_NAME = 'app-cache-v6';
+const CACHE_NAME = 'app-cache-v7';
 const urlsToCache = [
   '../index.html',
   '../styles.css',
   '../app.js',
+  '../src/js/main.js',
+  '../src/js/App.js',
+  '../src/js/StorageManager.js',
+  '../src/js/TalentManager.js',
+  '../src/js/UIController.js',
   './icon-192.png',
   './icon-512.png'
 ];
@@ -12,20 +17,39 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Cache abierto, añadiendo archivos...');
-        // Añadir uno por uno para que un solo archivo faltante no aborte la instalación entera de la PWA
         return Promise.allSettled(
-          urlsToCache.map(url => cache.add(new Request(url, {cache: 'reload'})))
+          urlsToCache.map(url => cache.add(new Request(url, { cache: 'reload' })))
         );
       })
       .catch(err => console.error('[SW] Error al cachear:', err))
   );
 });
 
+// Network-First para HTML y llamadas a la API (siempre datos frescos al abrir la app)
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // NUNCA cachear llamadas a la API de Neon/Netlify
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Network First con fallback a Cache para que los usuarios siempre reciban la última versión
   event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
+    fetch(event.request)
+      .then(response => {
+        if (response && response.status === 200 && event.request.method === 'GET') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });
 

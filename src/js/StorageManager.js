@@ -1,7 +1,149 @@
 export class StorageManager {
-    constructor(prosKey = 'pandatasker_pros_demo_v23', hiringsKey = 'pandatasker_hirings_demo_v23') {
+    constructor(
+        prosKey = 'pandatasker_pros_demo_v23', 
+        hiringsKey = 'pandatasker_hirings_demo_v23',
+        votesKey = 'servipailon_votes_v1',
+        sessionKey = 'servipailon_session_id'
+    ) {
         this.prosKey = prosKey;
         this.hiringsKey = hiringsKey;
+        this.votesKey = votesKey;
+        this.sessionKey = sessionKey;
+        this.adminTokenKey = 'servipailon_admin_token';
+    }
+
+    getAdminToken() {
+        try {
+            return sessionStorage.getItem(this.adminTokenKey) || '';
+        } catch {
+            return '';
+        }
+    }
+
+    setAdminToken(token) {
+        try {
+            if (token) {
+                sessionStorage.setItem(this.adminTokenKey, token);
+            } else {
+                sessionStorage.removeItem(this.adminTokenKey);
+            }
+        } catch (e) {
+            console.warn('Error guardando token en sessionStorage', e);
+        }
+    }
+
+    clearAdminToken() {
+        this.setAdminToken('');
+    }
+
+    async loginAdmin(password) {
+        try {
+            const res = await fetch('/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.token) {
+                    this.setAdminToken(data.token);
+                    return { success: true };
+                }
+            }
+            return { success: false, message: 'Contraseña incorrecta' };
+        } catch (err) {
+            console.warn('Fallo de red al autenticar en la nube:', err.message);
+            return { success: false, offline: true, message: 'Error de conexión con el servidor de autenticación' };
+        }
+    }
+
+    getSessionId() {
+        let sid = localStorage.getItem(this.sessionKey);
+        if (!sid) {
+            sid = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem(this.sessionKey, sid);
+        }
+        return sid;
+    }
+
+    getVotedProIds() {
+        try {
+            const data = localStorage.getItem(this.votesKey);
+            return data ? JSON.parse(data) : [];
+        } catch {
+            return [];
+        }
+    }
+
+    hasVoted(proId) {
+        return this.getVotedProIds().includes(proId);
+    }
+
+    saveLocalVote(proId) {
+        const votes = this.getVotedProIds();
+        if (!votes.includes(proId)) {
+            votes.push(proId);
+            localStorage.setItem(this.votesKey, JSON.stringify(votes));
+        }
+    }
+
+    removeLocalVote(proId) {
+        const votes = this.getVotedProIds().filter(id => id !== proId);
+        localStorage.setItem(this.votesKey, JSON.stringify(votes));
+    }
+
+    async registerVote(proId) {
+        const sessionId = this.getSessionId();
+        this.saveLocalVote(proId);
+
+        try {
+            const res = await fetch('/api/votes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ proId, sessionId })
+            });
+            if (res.ok) {
+                return await res.json();
+            }
+        } catch (err) {
+            console.log('Modo local para votos activo:', err.message);
+        }
+        return { success: true, localOnly: true };
+    }
+
+    async unregisterVote(proId) {
+        const sessionId = this.getSessionId();
+        this.removeLocalVote(proId);
+
+        try {
+            const res = await fetch('/api/votes', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ proId, sessionId })
+            });
+            if (res.ok) {
+                return await res.json();
+            }
+        } catch (err) {
+            console.log('Modo local para retiro de votos activo:', err.message);
+        }
+        return { success: true, removed: true, localOnly: true };
+    }
+
+    async syncVotesFromCloud() {
+        try {
+            const sessionId = this.getSessionId();
+            const res = await fetch(`/api/votes?sessionId=${encodeURIComponent(sessionId)}`);
+            if (res.ok) {
+                const cloudVotedIds = await res.json();
+                if (Array.isArray(cloudVotedIds)) {
+                    const localVotes = new Set([...this.getVotedProIds(), ...cloudVotedIds]);
+                    localStorage.setItem(this.votesKey, JSON.stringify([...localVotes]));
+                }
+            }
+        } catch (err) {
+            // Silencioso en modo local
+        }
     }
 
     getProfessionals() {
@@ -65,6 +207,108 @@ export class StorageManager {
             localStorage.setItem(this.hiringsKey, JSON.stringify(hirings));
         } catch (error) {
             console.error('Error guardando contrataciones en LocalStorage:', error);
+        }
+    }
+
+    /**
+     * Sincroniza datos en segundo plano desde la API (Neon PostgreSQL en Netlify)
+     */
+    async syncFromCloud(onSyncComplete) {
+        try {
+            const prosRes = await fetch('/api/professionals');
+            if (prosRes.ok) {
+                const prosData = await prosRes.json();
+                if (Array.isArray(prosData) && prosData.length > 0) {
+                    this.saveProfessionals(prosData);
+                }
+            }
+
+            const hiringsRes = await fetch('/api/hirings');
+            if (hiringsRes.ok) {
+                const hiringsData = await hiringsRes.json();
+                if (Array.isArray(hiringsData) && hiringsData.length > 0) {
+                    this.saveHirings(hiringsData);
+                }
+            }
+
+            await this.syncVotesFromCloud();
+
+            if (typeof onSyncComplete === 'function') {
+                onSyncComplete();
+            }
+        } catch (err) {
+            console.log('Modo local activo (fallback a LocalStorage):', err.message);
+        }
+    }
+
+    async saveProfessionalToCloud(pro) {
+        try {
+            const token = this.getAdminToken();
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            await fetch('/api/professionals', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(pro)
+            });
+        } catch (err) {
+            console.warn('No se pudo sincronizar profesional con Neon:', err.message);
+        }
+    }
+
+    async updateProfessionalInCloud(pro) {
+        try {
+            const token = this.getAdminToken();
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            await fetch('/api/professionals', {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify(pro)
+            });
+        } catch (err) {
+            console.warn('No se pudo actualizar profesional en Neon:', err.message);
+        }
+    }
+
+    async deleteProfessionalFromCloud(proId) {
+        try {
+            const token = this.getAdminToken();
+            const headers = {};
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            await fetch(`/api/professionals?id=${encodeURIComponent(proId)}`, {
+                method: 'DELETE',
+                headers
+            });
+        } catch (err) {
+            console.warn('No se pudo eliminar profesional en Neon:', err.message);
+        }
+    }
+
+    async saveHiringToCloud(hiring) {
+        try {
+            await fetch('/api/hirings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(hiring)
+            });
+        } catch (err) {
+            console.warn('No se pudo sincronizar contratación con Neon:', err.message);
+        }
+    }
+
+    async updateHiringInCloud(hireId, status) {
+        try {
+            await fetch('/api/hirings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: hireId, status })
+            });
+        } catch (err) {
+            console.warn('No se pudo actualizar contratación en Neon:', err.message);
         }
     }
 

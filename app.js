@@ -917,12 +917,13 @@ class App {
             }
         });
 
-        // --- 5.5. LOGIN DE ADMINISTRADOR ---
+        // --- 5.5. LOGIN DE ADMINISTRADOR SEGURO ---
         const loginAdminBtn = document.getElementById('loginAdminBtn');
         const adminBtnText = document.getElementById('adminBtnText');
-        loginAdminBtn?.addEventListener('click', () => {
+        loginAdminBtn?.addEventListener('click', async () => {
             if (this.isAdmin) {
                 this.isAdmin = false;
+                sessionStorage.removeItem('servipailon_admin_token');
                 adminBtnText.textContent = 'Acceso Admin';
                 document.getElementById('openProModalBtn').style.display = 'none';
                 document.getElementById('dashboardStats').style.display = 'none';
@@ -930,15 +931,30 @@ class App {
                 this.renderAll();
             } else {
                 const password = prompt('Ingrese la contraseña de Administrador:');
-                if (password === 'ServiPailon20') {
-                    this.isAdmin = true;
-                    adminBtnText.textContent = 'Cerrar Admin';
-                    document.getElementById('openProModalBtn').style.display = 'inline-flex';
-                    document.getElementById('dashboardStats').style.display = '';
-                    this.ui.showToast('Bienvenido, Administrador', 'success');
-                    this.renderAll();
-                } else if (password !== null) {
+                if (password === null || password.trim() === '') return;
+
+                try {
+                    const res = await fetch('/api/auth', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: password.trim() })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.token) {
+                            sessionStorage.setItem('servipailon_admin_token', data.token);
+                            this.isAdmin = true;
+                            adminBtnText.textContent = 'Cerrar Admin';
+                            document.getElementById('openProModalBtn').style.display = 'inline-flex';
+                            document.getElementById('dashboardStats').style.display = '';
+                            this.ui.showToast('Bienvenido, Administrador (Sesión segura iniciada)', 'success');
+                            this.renderAll();
+                            return;
+                        }
+                    }
                     this.ui.showToast('Contraseña incorrecta', 'error');
+                } catch {
+                    this.ui.showToast('Error de conexión con el servidor', 'error');
                 }
             }
         });

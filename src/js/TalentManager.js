@@ -34,12 +34,74 @@ export class TalentManager {
             photo: photoUrl,
             skills: skillsArray.length ? skillsArray : ['Profesional'],
             experience: Number(data.experience) || 1,
-            status: data.status || 'available'
+            status: data.status || 'available',
+            interacciones: Number(data.interacciones) || 0
         };
 
         this.pros.unshift(newPro);
         this.storage.saveProfessionals(this.pros);
+        this.storage.saveProfessionalToCloud(newPro);
         return newPro;
+    }
+
+    async voteForProfessional(proId) {
+        const pro = this.getProfessionalById(proId);
+        if (!pro) return { success: false, message: 'No encontrado' };
+
+        if (this.storage.hasVoted(proId)) {
+            return { 
+                success: false, 
+                yaVotado: true, 
+                interacciones: pro.interacciones || 0,
+                message: 'Ya votaste por este emprendimiento' 
+            };
+        }
+
+        // Incrementar localmente
+        pro.interacciones = (Number(pro.interacciones) || 0) + 1;
+        this.storage.saveProfessionals(this.pros);
+
+        // Registrar en Storage y en Cloud
+        const cloudResult = await this.storage.registerVote(proId);
+        if (cloudResult && cloudResult.interacciones !== undefined) {
+            pro.interacciones = cloudResult.interacciones;
+            this.storage.saveProfessionals(this.pros);
+        }
+
+        return { 
+            success: true, 
+            voted: true,
+            interacciones: pro.interacciones 
+        };
+    }
+
+    async toggleVoteForProfessional(proId) {
+        const pro = this.getProfessionalById(proId);
+        if (!pro) return { success: false, message: 'No encontrado' };
+
+        const currentlyVoted = this.storage.hasVoted(proId);
+
+        if (currentlyVoted) {
+            // Deseleccionar voto
+            pro.interacciones = Math.max(0, (Number(pro.interacciones) || 0) - 1);
+            this.storage.saveProfessionals(this.pros);
+
+            const cloudResult = await this.storage.unregisterVote(proId);
+            if (cloudResult && cloudResult.interacciones !== undefined) {
+                pro.interacciones = cloudResult.interacciones;
+                this.storage.saveProfessionals(this.pros);
+            }
+
+            return {
+                success: true,
+                voted: false,
+                interacciones: pro.interacciones,
+                message: 'Voto retirado'
+            };
+        } else {
+            // Votar
+            return await this.voteForProfessional(proId);
+        }
     }
 
     getProfessionalById(proId) {
@@ -54,6 +116,7 @@ export class TalentManager {
             }
             this.pros[index] = { ...this.pros[index], ...updatedFields };
             this.storage.saveProfessionals(this.pros);
+            this.storage.updateProfessionalInCloud(this.pros[index]);
             return this.pros[index];
         }
         return null;
@@ -64,6 +127,7 @@ export class TalentManager {
         this.pros = this.pros.filter(p => p.id !== proId);
         if (this.pros.length !== initialLength) {
             this.storage.saveProfessionals(this.pros);
+            this.storage.deleteProfessionalFromCloud(proId);
             return true;
         }
         return false;
@@ -88,6 +152,7 @@ export class TalentManager {
 
         this.hirings.unshift(newHire);
         this.storage.saveHirings(this.hirings);
+        this.storage.saveHiringToCloud(newHire);
         return newHire;
     }
 
@@ -96,23 +161,53 @@ export class TalentManager {
         if (index !== -1) {
             this.hirings[index].status = newStatus;
             this.storage.saveHirings(this.hirings);
+            this.storage.updateHiringInCloud(hireId, newStatus);
             return this.hirings[index];
         }
         return null;
     }
 
     getFilteredProfessionals() {
+        const normalize = (text) => {
+            return (text || '')
+                .toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase();
+        };
+
+        const query = normalize(this.currentSearchQuery).trim();
+        const tokens = query.split(/\s+/).filter(Boolean);
+
+        const areaKeywordsMap = {
+            health: 'salud medicina medico doctor enfermeria clinica farmacia dental odontologia',
+            education: 'educacion profesor maestro tutoria clases apoyo psicologia escuela',
+            business: 'negocios asesoria finanzas contabilidad administracion legal abogado consultoria',
+            services: 'servicios tecnico electricista plomero mecanica reparacion instalaciones chofer transporte arbitro cafeteria'
+        };
+
         return this.pros.filter(pro => {
             const matchesArea = this.currentAreaFilter === 'all' || pro.area === this.currentAreaFilter;
+            if (!matchesArea) return false;
 
-            const query = this.currentSearchQuery.toLowerCase();
-            const matchesSearch = !query ||
-                (pro.businessName && pro.businessName.toLowerCase().includes(query)) ||
-                pro.name.toLowerCase().includes(query) ||
-                pro.title.toLowerCase().includes(query) ||
-                pro.skills.some(s => s.toLowerCase().includes(query));
+            if (tokens.length === 0) return true;
 
-            return matchesArea && matchesSearch;
+            const areaSynonyms = areaKeywordsMap[pro.area] || '';
+            const searchableCorpus = normalize([
+                pro.businessName || '',
+                pro.name || '',
+                pro.title || '',
+                pro.area || '',
+                (pro.skills || []).join(' '),
+                pro.phone || '',
+                areaSynonyms
+            ].join(' '));
+
+            return tokens.every(token => searchableCorpus.includes(token));
+        }).sort((a, b) => {
+            const votesA = Number(a.interacciones) || 0;
+            const votesB = Number(b.interacciones) || 0;
+            return votesB - votesA; // Mayor a menor cantidad de votos
         });
     }
 

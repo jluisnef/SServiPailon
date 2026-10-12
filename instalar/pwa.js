@@ -9,7 +9,7 @@ pwaStyle.textContent = `
   #pwa-install-button {
     position: fixed;
     bottom: 25px;
-    right: 25px;
+    left: 25px;
     padding: 12px 24px;
     background: linear-gradient(135deg, #00F2FE 0%, #4FACFE 100%);
     color: white;
@@ -91,16 +91,28 @@ installButton.addEventListener('click', async () => {
   }
 });
 
-// Registro del Service Worker (sin cambios)
+// Registro del Service Worker con Auto-Actualización en segundo plano
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
+    navigator.serviceWorker.register('./instalar/sw.js', { scope: '/' })
       .then(registration => {
         console.log('[PWA] Service Worker registrado con éxito:', registration.scope);
+        // Buscar actualizaciones silenciosamente cada vez que abren la app
+        registration.update();
       })
-      .catch(error => {
-        console.error('[PWA] Error al registrar Service Worker:', error);
+      .catch(() => {
+        // Fallback relativo si se ejecuta desde subcarpeta
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('[SW]', err.message));
       });
+  });
+
+  // Si hay nueva versión activada, recargar suavemente para que los usuarios vean los cambios inmediatamente
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      console.log('[PWA] Nueva versión detectada y aplicada automáticamente.');
+    }
   });
 }
 

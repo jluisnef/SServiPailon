@@ -7,6 +7,10 @@
     <title>ServiPailon</title>
     <meta name="description"
         content="Plataforma web amigable, luminosa y moderna para registrar y contratar profesionales y especialistas con perfiles fotográficos reales en cualquier área de trabajo.">
+    <!-- Favicon (Ícono de la pestaña del navegador) -->
+    <link rel="icon" type="image/png" href="./instalar/icon-512.png">
+    <link rel="apple-touch-icon" href="./instalar/icon-512.png">
+
     <!-- Google Fonts: Plus Jakarta Sans y Outfit para una estética amigable, clara y moderna -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,114 +25,35 @@
 
 <body>
     <div class="app-layout">
-        <!-- SIDEBAR SEMÁNTICO (<aside> + <nav>) -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <div class="logo" id="logoHomeBtn" style="cursor: pointer;" title="Volver al Directorio">
-                    <img src="./instalar/icon-512.png" alt="Logo ServiPailon" class="logo-icon"
-                        style="background: white; padding: 2px; object-fit: contain;">
-                    <span class="logo-text">Servi<span>Pailón</span></span>
-                </div>
-                <button class="mobile-close-btn" id="closeSidebarBtn" aria-label="Cerrar menú lateral">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-
-            <!-- Menú Principal de Navegación -->
-            <nav class="sidebar-nav">
-                <span class="nav-section-title">PLATAFORMA</span>
-                <ul id="mainNav">
-
-                    <li>
-                        <a href="https://wa.me/59172857225" target="_blank" class="nav-link"
-                            style="background-color: #25D366; color: white; border-radius: 12px; padding: 12px 15px; display: flex; justify-content: center; align-items: center; text-decoration: none; font-weight: 600; margin-top: 20px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); transition: transform 0.2s;">
-                            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                                style="margin-right: 8px;">
-                                <path
-                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                                </path>
-                            </svg>
-                            <span>Contactar por WhatsApp Admin</span>
-                        </a>
-                    </li>
-                    <li style="display: none;">
-                        <button class="nav-link" data-view="hirings" id="navHiringsBtn">
-                            <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                            </svg>
-                            <span>Mis Contrataciones</span>
-                            <span class="nav-badge" id="badgeHirings">0</span>
-                        </button>
-                    </li>
-                </ul>
-
-                <span class="nav-section-title">FILTRAR POR ÁREA DE TRABAJO</span>
-                <ul class="area-filters" id="areaFilters">
-                    <li><button class="filter-btn active" data-area="all"><span class="dot dot-all"></span> Todas las
-                            Áreas</button></li>
-                    <li><button class="filter-btn" data-area="health"><span class="dot dot-health"></span> 🩺
-                            Salud</button></li>
-                    <li><button class="filter-btn" data-area="education"><span class="dot dot-education"></span> 📚
-                            Educación</button></li>
-                    <li><button class="filter-btn" data-area="business"><span class="dot dot-business"></span> 📈
-                            Asesoría y Negocios</button></li>
-                    <li><button class="filter-btn" data-area="services"><span class="dot dot-services"></span> 🔧
-                            Servicios</button></li>
-                </ul>
-
-
-            </nav>
-
-            <div class="sidebar-footer">
-            </div>
-        </aside>
 
         <!-- ÁREA DE CONTENIDO PRINCIPAL (<main>) -->
         <main class="main-content" id="mainContent">
             <!-- CABECERA PRINCIPAL (<header>) -->
             <header class="top-header">
                 <div class="header-left">
-                    <button class="mobile-menu-btn" id="openSidebarBtn" aria-label="Abrir menú lateral">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                        </svg>
-                    </button>
-                    <div>
-                        <h1 class="header-title" id="pageTitle">TALENTO PAILONEÑO</h1>
-                        <p class="header-subtitle" id="pageSubtitle">Encuentra y contrata al especialista ideal con
-                            experiencia para ti</p>
+                    <img src="./instalar/icon-512.png" alt="Logo ServiPailón" class="header-logo">
+                    <div class="header-brand-info">
+                        <h1 class="header-title" id="pageTitle">
+                            <span class="brand-servi">Servi</span><span class="brand-pailon">Pailón</span>
+                        </h1>
+                        <p class="header-subtitle" id="pageSubtitle">
+                            Encuentra y contrata al especialista ideal con experiencia para ti
+                        </p>
                     </div>
                 </div>
 
-                <div class="header-right" style="display: flex; gap: 10px;">
-                    <!-- Buscador multi-criterio -->
-                    <div class="search-bar">
-                        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <div class="header-right">
+                    <!-- Botón Contactar por WhatsApp Admin -->
+                    <a href="https://wa.me/59172857225" target="_blank" class="header-btn btn-wa-admin">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                         </svg>
-                        <input type="search" id="searchInput"
-                            placeholder="Buscar por especialidad, habilidad o nombre..."
-                            aria-label="Buscar profesional">
-                        <button class="clear-search-btn" id="clearSearchBtn" aria-label="Limpiar búsqueda"
-                            title="Limpiar búsqueda">&times;</button>
-                    </div>
+                        <span>WhatsApp Admin</span>
+                    </a>
 
                     <!-- Botón para Login Admin -->
-                    <button class="btn btn-secondary" id="loginAdminBtn">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <button type="button" class="header-btn btn-login-admin" id="loginAdminBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                         </svg>
@@ -136,15 +61,14 @@
                     </button>
 
                     <!-- Botón para registrar nuevo profesional (Solo admin) -->
-                    <button class="btn btn-primary" id="openProModalBtn" style="display: none;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <button type="button" class="header-btn btn-primary-admin" id="openProModalBtn" style="display: none;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                             <circle cx="8.5" cy="7" r="4"></circle>
                             <line x1="20" y1="8" x2="20" y2="14"></line>
                             <line x1="23" y1="11" x2="17" y2="11"></line>
                         </svg>
-                        <span>+ Registrar Profesional</span>
+                        <span>+ Registrar</span>
                     </button>
                 </div>
             </header>
@@ -234,6 +158,150 @@
 
             <!-- VISTA 1: DIRECTORIO DE PROFESIONALES -->
             <section class="view-section active" id="directoryView" aria-label="Rejilla de perfiles profesionales">
+
+
+
+
+                <!-- BOTONES DE CATEGORÍA SUPERIORES (CENTRADOS) -->
+                <style>
+                    .top-category-filters {
+                        display: flex;
+                        flex-wrap: wrap;
+                        justify-content: center;
+                        align-items: center;
+                        gap: 12px;
+                        margin-bottom: 25px;
+                        margin-top: 10px;
+                        width: 100%;
+                    }
+
+                    .top-category-filters .filter-btn {
+                        width: auto;
+                        white-space: nowrap;
+                        border-radius: 30px;
+                        border: 2px solid transparent;
+                        background-color: white;
+                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        padding: 8px 16px;
+                    }
+
+                    .top-category-filters .filter-btn[data-area="all"] {
+                        border-color: #e5e7eb;
+                        color: #4b5563;
+                    }
+
+                    .top-category-filters .filter-btn[data-area="all"].active {
+                        background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+                        color: #111827;
+                        border-color: #d1d5db;
+                        transform: scale(1.05);
+                    }
+
+                    .top-category-filters .filter-btn[data-area="health"] {
+                        border-color: rgba(168, 85, 247, 0.3);
+                        color: #9333ea;
+                    }
+
+                    .top-category-filters .filter-btn[data-area="health"].active {
+                        background: linear-gradient(135deg, #c084fc, #9333ea);
+                        color: white !important;
+                        box-shadow: 0 6px 15px rgba(168, 85, 247, 0.4);
+                        border-color: transparent;
+                        transform: scale(1.05);
+                    }
+
+                    .top-category-filters .filter-btn[data-area="education"] {
+                        border-color: rgba(59, 130, 246, 0.3);
+                        color: #2563eb;
+                    }
+
+                    .top-category-filters .filter-btn[data-area="education"].active {
+                        background: linear-gradient(135deg, #60a5fa, #2563eb);
+                        color: white !important;
+                        box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+                        border-color: transparent;
+                        transform: scale(1.05);
+                    }
+
+                    .top-category-filters .filter-btn[data-area="business"] {
+                        border-color: rgba(16, 185, 129, 0.3);
+                        color: #059669;
+                    }
+
+                    .top-category-filters .filter-btn[data-area="business"].active {
+                        background: linear-gradient(135deg, #34d399, #059669);
+                        color: white !important;
+                        box-shadow: 0 6px 15px rgba(16, 185, 129, 0.4);
+                        border-color: transparent;
+                        transform: scale(1.05);
+                    }
+
+                    .top-category-filters .filter-btn[data-area="services"] {
+                        border-color: rgba(245, 158, 11, 0.3);
+                        color: #d97706;
+                    }
+
+                    .top-category-filters .filter-btn[data-area="services"].active {
+                        background: linear-gradient(135deg, #fbbf24, #d97706);
+                        color: white !important;
+                        box-shadow: 0 6px 15px rgba(245, 158, 11, 0.4);
+                        border-color: transparent;
+                        transform: scale(1.05);
+                    }
+
+                    .top-category-filters .filter-btn.active .dot {
+                        background-color: white !important;
+                        box-shadow: none !important;
+                    }
+
+                    .top-category-filters .filter-btn[data-area="all"].active .dot {
+                        background-color: #6b7280 !important;
+                    }
+                </style>
+
+                <!-- BUSCADOR INTELIGENTE CON PALABRAS CLAVE -->
+                <div class="search-container">
+                    <div class="search-input-wrapper">
+                        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar por emprendimiento, servicio o palabra clave (ej: Taller, Electricista, Odontología...)" autocomplete="off">
+                        <button type="button" id="clearSearchBtn" class="search-clear-btn" aria-label="Limpiar búsqueda" style="display: none;" title="Limpiar búsqueda">
+                            &times;
+                        </button>
+                        <span id="searchResultCount" class="search-count-badge" style="display: none;">0 resultados</span>
+                    </div>
+
+                    <!-- CHIPS DE ACCESO RÁPIDO POR PALABRAS CLAVE -->
+                    <div class="quick-keywords-wrapper" id="quickKeywordsWrapper">
+                        <span class="keywords-label">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            Palabras clave:
+                        </span>
+                        <div class="quick-keywords-list" id="quickKeywordsList">
+                            <button type="button" class="keyword-chip" data-keyword="electricista">⚡ Electricista</button>
+                            <button type="button" class="keyword-chip" data-keyword="medicina">🩺 Medicina y Farmacia</button>
+                            <button type="button" class="keyword-chip" data-keyword="odontologia">🦷 Odontología</button>
+                            <button type="button" class="keyword-chip" data-keyword="fisioterapia">💆 Fisioterapia</button>
+                            <button type="button" class="keyword-chip" data-keyword="apoyo escolar">📚 Apoyo Escolar</button>
+                            <button type="button" class="keyword-chip" data-keyword="arbitro">⚽ Árbitro / Deporte</button>
+                            <button type="button" class="keyword-chip" data-keyword="nutricion">☕ Nutrición / Cafetería</button>
+                            <button type="button" class="keyword-chip" data-keyword="psicologia">🧠 Psicología</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="top-category-filters"
+                    style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin-bottom: 25px; margin-top: 10px; width: 100%;">
+                    <button class="filter-btn active" data-area="all"><span class="dot dot-all"></span> 🌐 Todas</button>
+                    <button class="filter-btn" data-area="health"><span class="dot dot-health"></span> 🩺 Salud</button>
+                    <button class="filter-btn" data-area="education"><span class="dot dot-education"></span> 📚 Educación</button>
+                    <button class="filter-btn" data-area="business"><span class="dot dot-business"></span> 📈 Asesoría y Negocios</button>
+                    <button class="filter-btn" data-area="services"><span class="dot dot-services"></span> 🔧 Servicios</button>
+                </div>
+
                 <div class="professionals-grid" id="professionalsGrid">
                     <!-- Contenedor dinámico donde las tarjetas con foto del personal se inyectan via JS -->
                 </div>
@@ -329,10 +397,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="proSkills">Habilidades clave (separadas por coma) <span
+                    <label for="proSkills">Palabras clave y servicios para búsqueda (separadas por coma) <span
                             class="required">*</span></label>
                     <input type="text" id="proSkills"
-                        placeholder="Ej. React, Node.js, Instalaciones, Electricidad, Figma" required>
+                        placeholder="Ej. Electricidad, Mantenimiento, Reparaciones, Urgencias, Domicilio" required>
                 </div>
 
                 <div class="form-row">

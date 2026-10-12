@@ -9,7 +9,7 @@ pwaStyle.textContent = `
   #pwa-install-button {
     position: fixed;
     bottom: 25px;
-    right: 25px;
+    left: 25px;
     padding: 12px 24px;
     background: linear-gradient(135deg, #4ade80 0%, #16a34a 100%);
     color: white;

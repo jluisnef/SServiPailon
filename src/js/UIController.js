@@ -43,11 +43,11 @@ export class UIController {
     }
 
     updateDashboardStats(stats, totalHiringsCount) {
-        this.statTotalPros.textContent = stats.totalPros;
-        this.statAvailablePros.textContent = stats.availablePros;
-        this.statActiveHirings.textContent = stats.activeHirings;
-        this.statTotalAreas.textContent = stats.totalAreas;
-        this.badgeHirings.textContent = totalHiringsCount;
+        if (this.statTotalPros) this.statTotalPros.textContent = stats.totalPros;
+        if (this.statAvailablePros) this.statAvailablePros.textContent = stats.availablePros;
+        if (this.statActiveHirings) this.statActiveHirings.textContent = stats.activeHirings;
+        if (this.statTotalAreas) this.statTotalAreas.textContent = stats.totalAreas;
+        if (this.badgeHirings) this.badgeHirings.textContent = totalHiringsCount;
 
         const total = stats.totalPros || 1;
         const availPct = Math.round((stats.availablePros / total) * 100);
@@ -57,14 +57,41 @@ export class UIController {
         this.progressHirings.style.width = `${hiringsPct}%`;
     }
 
-    renderDirectory(pros) {
+    renderDirectory(pros, currentQuery = '') {
         this.professionalsGrid.innerHTML = '';
 
+        const searchResultCount = document.getElementById('searchResultCount');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+        if (clearSearchBtn) {
+            clearSearchBtn.style.display = currentQuery && currentQuery.trim() ? 'inline-flex' : 'none';
+        }
+
+        if (searchResultCount) {
+            if (currentQuery && currentQuery.trim()) {
+                searchResultCount.style.display = 'inline-block';
+                searchResultCount.textContent = `${pros.length} encontrado${pros.length === 1 ? '' : 's'}`;
+            } else {
+                searchResultCount.style.display = 'none';
+            }
+        }
+
         if (pros.length === 0) {
+            const hasQuery = currentQuery && currentQuery.trim().length > 0;
             this.professionalsGrid.innerHTML = `
                 <div class="empty-state">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="18" y1="8" x2="23" y2="13"></line><line x1="23" y1="8" x2="18" y2="13"></line></svg>
-                    <p>No se encontraron profesionales que coincidan con tu búsqueda actual.</p>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                    <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">
+                        ${hasQuery ? 'No se encontraron emprendimientos' : 'Sin registros disponibles'}
+                    </h3>
+                    <p style="margin: 0; max-width: 400px; font-size: 0.9rem;">
+                        ${hasQuery ? `No encontramos resultados para "<strong>${this.escapeHTML(currentQuery)}</strong>". Intenta con palabras clave como <em>electricista</em>, <em>odontología</em>, <em>salud</em> o <em>mecánica</em>.` : 'No hay profesionales registrados en esta categoría en este momento.'}
+                    </p>
+                    ${hasQuery ? '<button type="button" class="empty-state-btn" id="resetSearchFromEmptyBtn">Ver todos los emprendimientos</button>' : ''}
                 </div>
             `;
             return;
@@ -77,19 +104,40 @@ export class UIController {
             services: '🔧 Servicios'
         };
 
+        const normalize = (t) => (t || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+        const normTokens = normalize(currentQuery).split(/\s+/).filter(Boolean);
+
         pros.forEach(pro => {
             const initials = pro.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
             const isAvailable = pro.status === 'available';
+            const votesCount = Number(pro.interacciones) || 0;
+            const hasVoted = window.ServiPailonApp && window.ServiPailonApp.storage ? window.ServiPailonApp.storage.hasVoted(pro.id) : false;
 
             // Si hay foto, intentamos cargar la img; si falla o está vacía se muestra el fallback con iniciales
             const photoImg = pro.photo ?
                 `<img src="${this.escapeHTML(pro.photo)}" class="pro-avatar-img" alt="${this.escapeHTML(pro.name)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">` : '';
             const fallbackStyle = pro.photo ? 'style="display:none;"' : '';
 
+            const defaultMessage = `Hola ${pro.name}, te vi en ServiPailón y me gustaría solicitar tus servicios.`;
+
             const cardHTML = `
                 <article class="pro-card glass" data-id="${pro.id}">
                     <div class="pro-card-header">
-                        <span class="area-badge area-${pro.area}">${areaLabels[pro.area] || pro.area}</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="area-badge area-${pro.area}">${areaLabels[pro.area] || pro.area}</span>
+                            
+                            <!-- ESTRELLITA DE VOTACIÓN / INTERACCIONES -->
+                            <button type="button" 
+                                    class="vote-star-btn ${hasVoted ? 'active' : ''}" 
+                                    data-id="${pro.id}" 
+                                    title="${hasVoted ? 'Ya votaste por este emprendimiento' : 'Votar por este emprendimiento'}">
+                                <svg class="star-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                                <span class="vote-count" id="voteCount-${pro.id}">${votesCount}</span>
+                            </button>
+                        </div>
+
                         ${window.ServiPailonApp && window.ServiPailonApp.isAdmin ? `
                         <div class="pro-actions" style="display: flex; align-items: center; gap: 5px;">
                             <select class="admin-quick-status" data-id="${pro.id}" style="background: var(--bg-input); color: var(--text-primary); font-size: 0.75rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border-glass); cursor: pointer; outline: none;">
@@ -123,26 +171,36 @@ export class UIController {
                     </div>
 
                     <div class="skill-tags">
-                        ${pro.skills.map(skill => `<span class="skill-tag">${this.escapeHTML(skill)}</span>`).join('')}
+                        ${pro.skills.map(skill => {
+                            const normSkill = normalize(skill);
+                            const isMatched = normTokens.length > 0 && normTokens.some(token => normSkill.includes(token));
+                            return `<span class="skill-tag ${isMatched ? 'highlighted' : ''}">${this.escapeHTML(skill)}</span>`;
+                        }).join('')}
                     </div>
 
                     <div class="pro-stats-bar">
-
                         <div class="pro-stat-item">
                             <span class="pro-stat-label">Experiencia</span>
                             <span class="pro-stat-value">${pro.experience} años</span>
                         </div>
+                        <div class="pro-stat-item">
+                            <span class="pro-stat-label">Recomendaciones</span>
+                            <span class="pro-stat-value" id="cardVotes-${pro.id}">⭐ ${votesCount}</span>
+                        </div>
                     </div>
 
                     <div class="pro-card-footer">
-                        <a href="${isAvailable ? `https://wa.me/${pro.phone}?text=Hola%20${encodeURIComponent(pro.name)},%20te%20encontré%20en%20ServiPailon%20y%20me%20gustaría%20solicitar%20tus%20servicios.` : '#'}" 
-                           target="${isAvailable ? '_blank' : '_self'}" 
-                           class="btn-hire ${!isAvailable ? 'busy' : ''}" 
-                           style="text-decoration: none; display: inline-flex; justify-content: center; align-items: center; gap: 6px; padding: 10px 15px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; transition: all 0.3s ease; ${!isAvailable ? 'background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; cursor: not-allowed; opacity: 0.8;' : 'background: var(--accent-gradient); color: white;'}" 
-                           ${!isAvailable ? 'title="Actualmente asignado a otro proyecto" onclick="return false;"' : ''}>
+                        <button type="button" 
+                           class="btn-hire whatsapp-btn ${!isAvailable ? 'busy' : ''}" 
+                           data-id="${pro.id}"
+                           data-phone="${this.escapeHTML(pro.phone || '')}"
+                           data-message="${this.escapeHTML(defaultMessage)}"
+                           data-available="${isAvailable}"
+                           style="text-decoration: none; width: 100%; border: none; cursor: ${isAvailable ? 'pointer' : 'not-allowed'}; display: inline-flex; justify-content: center; align-items: center; gap: 6px; padding: 10px 15px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; transition: all 0.3s ease; ${!isAvailable ? 'background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; opacity: 0.8;' : 'background: var(--accent-gradient); color: white;'}" 
+                           ${!isAvailable ? 'title="Actualmente asignado a otro proyecto"' : ''}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
                             <span>${isAvailable ? 'Contactar por WhatsApp' : 'Actualmente Ocupado'}</span>
-                        </a>
+                        </button>
                     </div>
                 </article>
             `;

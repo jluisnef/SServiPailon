@@ -1,0 +1,12 @@
+{
+  "name": "servipailon-app",
+  "version": "1.0.0",
+  "description": "ServiPailon - Plataforma web y PWA con base de datos Neon PostgreSQL y despliegue en Netlify",
+  "type": "module",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4"
+  }
+}
